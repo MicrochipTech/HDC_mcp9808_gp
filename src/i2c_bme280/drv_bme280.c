@@ -80,7 +80,292 @@
 
 #define APP_TEMP_TEMPERATURE_REG_ADDR               0x00
 
+/**
+  Section: Variable Definitions
+ */
+
+typedef union {
+
+    struct {
+        uint8_t im_update : 1;
+        uint8_t: 2;
+        uint8_t measuring : 1;
+        uint8_t: 4;
+    };
+    uint8_t statusReg;
+} bme280_status_t;
+
+typedef union {
+
+    struct {
+        uint8_t mode : 2;
+        uint8_t osrs_P : 3;
+        uint8_t osrs_T : 3;
+    };
+    uint8_t ctrlMeasReg;
+} bme280_ctrl_meas_t;
+
+typedef union {
+
+    struct {
+        uint8_t spi3w_en : 1;
+        uint8_t filter : 3;
+        uint8_t t_sb : 3;
+    };
+    uint8_t configReg;
+} bme280_config_t;
+
+typedef struct {
+    uint16_t dig_T1;
+    int dig_T2;
+    int dig_T3;
+    uint16_t dig_P1;
+    int dig_P2;
+    int dig_P3;
+    int dig_P4;
+    int dig_P5;
+    int dig_P6;
+    int dig_P7;
+    int dig_P8;
+    int dig_P9;
+    uint8_t dig_H1;
+    int dig_H2;
+    uint8_t dig_H3;
+    int dig_H4;
+    int dig_H5;
+    signed char dig_H6;
+} bme280_calibration_param_t;
+
+bme280_config_t bme280_config;
+uint8_t bme280_ctrl_hum;
+bme280_ctrl_meas_t bme280_ctrl_meas;
+bme280_status_t bme280_status;
+bme280_calibration_param_t calibParam;
+
+long adc_T, adc_H, adc_P, t_fine;
+
 DRV_BME280_OBJ gDrvBME280Obj[DRV_BME280_INSTANCES_NUMBER];
+
+/**
+  Section: Private function prototypes
+ */
+
+uint8_t BME280_getStatus(const DRV_HANDLE handle);
+static long BME280_compensateTemperature(void);
+static uint32_t BME280_compensatePressure(void);
+static uint32_t BME280_compensateHumidity(void);
+
+bool DRV_BME280_writeByte(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t data);
+void BME280_writeBlock(uint8_t *write_buff, uint8_t length);
+uint8_t BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr);
+bool BME280_readBlock(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t *read_buff, uint8_t length);
+
+/**
+  Section: Driver APIs
+ */
+
+uint8_t BME280_getID(const DRV_HANDLE handle) {
+    return BME280_readByte(handle, BME280_ID_REG);
+}
+
+void BME280_reset(const DRV_HANDLE handle) {
+    DRV_BME280_writeByte(handle, BME280_RESET_REG, BME280_SOFT_RESET);
+}
+
+void BME280_sleep(const DRV_HANDLE handle) {
+    bme280_ctrl_meas.mode = BME280_SLEEP_MODE;
+    DRV_BME280_writeByte(handle, BME280_CTRL_MEAS_REG, bme280_ctrl_meas.ctrlMeasReg);
+}
+
+void BME280_readFactoryCalibrationParams(const DRV_HANDLE handle) {
+    uint8_t paramBuff[24]={0};
+
+    BME280_readBlock(handle, BME280_CALIB_DT1_LSB_REG, paramBuff, 24);
+    calibParam.dig_T1 = (((uint16_t) paramBuff[1]) << 8) + paramBuff[0];
+    calibParam.dig_T2 = (((int) paramBuff[3]) << 8) + paramBuff[2];
+    calibParam.dig_T3 = (((int) paramBuff[5]) << 8) + paramBuff[4];
+    calibParam.dig_P1 = (((uint16_t) paramBuff[7]) << 8) + paramBuff[6];
+    calibParam.dig_P2 = (((int) paramBuff[9]) << 8) + paramBuff[8];
+    calibParam.dig_P3 = (((int) paramBuff[11]) << 8) + paramBuff[10];
+    calibParam.dig_P4 = (((int) paramBuff[13]) << 8) + paramBuff[12];
+    calibParam.dig_P5 = (((int) paramBuff[15]) << 8) + paramBuff[14];
+    calibParam.dig_P6 = (((int) paramBuff[17]) << 8) + paramBuff[16];
+    calibParam.dig_P7 = (((int) paramBuff[19]) << 8) + paramBuff[18];
+    calibParam.dig_P8 = (((int) paramBuff[21]) << 8) + paramBuff[20];
+    calibParam.dig_P9 = (((int) paramBuff[23]) << 8) + paramBuff[22];
+
+    calibParam.dig_H1 = (uint8_t) BME280_readByte(handle, BME280_CALIB_DH1_REG);
+
+    BME280_readBlock(handle, BME280_CALIB_DH2_LSB_REG, paramBuff, 7);
+    calibParam.dig_H2 = (((int) paramBuff[1]) << 8) + paramBuff[0];
+    calibParam.dig_H3 = (uint8_t) paramBuff[2];
+    calibParam.dig_H4 = (((int) paramBuff[3]) << 4) | (paramBuff[4] & 0xF);
+    calibParam.dig_H5 = (((int) paramBuff[5]) << 4) | (paramBuff[4] >> 4);
+    calibParam.dig_H6 = (short) paramBuff[6];
+}
+
+void BME280_setStandbyTime(uint8_t sbtime) {
+    bme280_config.t_sb = sbtime;
+}
+
+void BME280_setFilterCoefficient(uint8_t coeff) {
+    bme280_config.filter = coeff;
+}
+
+void BME280_setOversamplingTemperature(uint8_t osrs_t) {
+    bme280_ctrl_meas.osrs_T = osrs_t;
+}
+
+void BME280_setOversamplingPressure(uint8_t osrs_p) {
+    bme280_ctrl_meas.osrs_P = osrs_p;
+}
+
+void BME280_setOversamplingHumidity(uint8_t osrs_h) {
+    bme280_ctrl_hum = osrs_h;
+}
+
+void BME280_setSensorMode(uint8_t mode) {
+    bme280_ctrl_meas.mode = mode;
+}
+
+void BME280_initializeSensor(const DRV_HANDLE handle) {
+    DRV_BME280_writeByte(handle, BME280_CONFIG_REG, bme280_config.configReg);
+    DRV_BME280_writeByte(handle, BME280_CTRL_HUM_REG, bme280_ctrl_hum);
+    DRV_BME280_writeByte(handle, BME280_CTRL_MEAS_REG, bme280_ctrl_meas.ctrlMeasReg);
+}
+
+void BME280_startForcedSensing(const DRV_HANDLE handle) {
+    bme280_ctrl_meas.mode = BME280_FORCED_MODE;
+    DRV_BME280_writeByte(handle, BME280_CTRL_MEAS_REG, bme280_ctrl_meas.ctrlMeasReg);
+}
+
+uint8_t BME280_isMeasuring(const DRV_HANDLE handle) {
+    bme280_status.statusReg = BME280_getStatus(handle);
+    return (bme280_status.measuring);
+}
+
+void BME280_readMeasurements(const DRV_HANDLE handle) {
+    uint8_t sensorData[BME280_DATA_FRAME_SIZE]={0};
+
+    BME280_readBlock(handle, BME280_PRESS_MSB_REG, sensorData, BME280_DATA_FRAME_SIZE);
+
+    adc_H = ((uint32_t) sensorData[BME280_HUM_MSB] << 8) |
+            sensorData[BME280_HUM_LSB];
+
+    adc_T = ((uint32_t) sensorData[BME280_TEMP_MSB] << 12) |
+            (((uint32_t) sensorData[BME280_TEMP_LSB] << 4) |
+            ((uint32_t) sensorData[BME280_TEMP_XLSB] >> 4));
+
+    adc_P = ((uint32_t) sensorData[BME280_PRESS_MSB] << 12) |
+            (((uint32_t) sensorData[BME280_PRESS_LSB] << 4) |
+            ((uint32_t) sensorData[BME280_PRESS_XLSB] >> 4));
+}
+
+float BME280_getTemperature(void) {
+    float temperature = (float) BME280_compensateTemperature() / 100;
+    return temperature;
+}
+
+float BME280_getPressure(void) {
+    float pressure = (float) BME280_compensatePressure() / 1000;
+    return pressure;
+}
+
+float BME280_getHumidity(void) {
+    float humidity = (float) BME280_compensateHumidity() / 1024;
+    return humidity;
+}
+
+uint8_t BME280_getStatus(const DRV_HANDLE handle) {
+    bme280_status.statusReg = BME280_readByte(handle, BME280_STATUS_REG);
+    return bme280_status.statusReg;
+}
+
+/*
+ * Returns temperature in DegC, resolution is 0.01 DegC.
+ * Output value of "5123" equals 51.23 DegC.
+ */
+static long BME280_compensateTemperature(void) {
+    long tempV1, tempV2, t;
+
+    tempV1 = ((((adc_T >> 3) - ((long) calibParam.dig_T1 << 1))) * ((long) calibParam.dig_T2)) >> 11;
+    tempV2 = (((((adc_T >> 4) - ((long) calibParam.dig_T1)) * ((adc_T >> 4) - ((long) calibParam.dig_T1))) >> 12)*((long) calibParam.dig_T3)) >> 14;
+    t_fine = tempV1 + tempV2;
+    t = (t_fine * 5 + 128) >> 8;
+
+    return t;
+}
+
+/*
+ * Returns pressure in Pa as unsigned 32 bit integer.
+ * Output value of "96386" equals 96386 Pa = 96.386 kPa
+ */
+static uint32_t BME280_compensatePressure(void) {
+    long pressV1, pressV2;
+    uint32_t p;
+
+    pressV1 = (((long) t_fine) >> 1) - (long) 64000;
+    pressV2 = (((pressV1 >> 2) * (pressV1 >> 2)) >> 11) * ((long) calibParam.dig_P6);
+    pressV2 = pressV2 + ((pressV1 * ((long) calibParam.dig_P5)) << 1);
+    pressV2 = (pressV2 >> 2)+(((long) calibParam.dig_P4) << 16);
+    pressV1 = (((calibParam.dig_P3 * (((pressV1 >> 2) * (pressV1 >> 2)) >> 13)) >> 3) +
+            ((((long) calibParam.dig_P2) * pressV1) >> 1)) >> 18;
+    pressV1 = ((((32768 + pressV1))*((long) calibParam.dig_P1)) >> 15);
+
+    if (pressV1 == 0) {
+        // avoid exception caused by division by zero
+        return 0;
+    }
+
+    p = (((uint32_t) (((long) 1048576) - adc_P)-(pressV2 >> 12)))*3125;
+    if (p < 0x80000000) {
+        p = (p << 1) / ((uint32_t) pressV1);
+    } else {
+        p = (p / (uint32_t) pressV1) * 2;
+    }
+
+    pressV1 = (((long) calibParam.dig_P9) * ((long) (((p >> 3) * (p >> 3)) >> 13))) >> 12;
+    pressV2 = (((long) (p >> 2)) * ((long) calibParam.dig_P8)) >> 13;
+    p = (uint32_t) ((long) p + ((pressV1 + pressV2 + calibParam.dig_P7) >> 4));
+
+    return p;
+}
+
+/*
+ * Returns humidity in %RH as unsigned 32 bit integer in Q22.10 format
+ * (22 integer and 10 fractional bits).
+ * Output value of "47445" represents 47445/1024 = 46.333 %RH
+ */
+static uint32_t BME280_compensateHumidity(void) {
+    long humV;
+    uint32_t h;
+
+    humV = (t_fine - ((long) 76800));
+    humV = (((((adc_H << 14) - (((long) calibParam.dig_H4) << 20) - (((long) calibParam.dig_H5) * humV)) +
+            ((long) 16384)) >> 15) * (((((((humV * ((long) calibParam.dig_H6)) >> 10) *
+            (((humV * ((long) calibParam.dig_H3)) >> 11) + ((long) 32768))) >> 10) +
+            ((long) 2097152)) * ((long) calibParam.dig_H2) + 8192) >> 14));
+    humV = (humV - (((((humV >> 15) * (humV >> 15)) >> 7) * ((long) calibParam.dig_H1)) >> 4));
+    humV = (humV < 0 ? 0 : humV);
+    humV = (humV > 419430400 ? 419430400 : humV);
+
+    h = (uint32_t) (humV >> 12);
+    return h;
+}
+
+//void BME280_writeBlock(uint8_t *write_buff, uint8_t length) {
+//    CLICK_WEATHER_I2C_Write(BME280_ADDR, write_buff, length);
+//    while(CLICK_WEATHER_I2C_IsBusy() == true);
+//}
+
+//void BME280_readBlock(uint8_t reg_addr, uint8_t *read_buff, uint8_t length) {
+//    uint8_t txBuffer_Read_Addr[1];
+//    txBuffer_Read_Addr[0] =  reg_addr;
+//
+//    CLICK_WEATHER_I2C_WriteRead(BME280_ADDR, txBuffer_Read_Addr, 1, read_buff, length);
+//    while(CLICK_WEATHER_I2C_IsBusy() == true);
+//
+//}
 
 static void DRV_BME280_DRVEventHandler( DRV_I2C_TRANSFER_EVENT event, DRV_I2C_TRANSFER_HANDLE transferHandle, uintptr_t context )
 {
@@ -299,6 +584,119 @@ uint8_t DRV_BME280_TemperatureGet(const DRV_HANDLE handle, uint16_t* temperature
     return (uint8_t)temp;    
 }
 
+bool DRV_BME280_writeByte(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t data) 
+{
+    DRV_BME280_CLIENT_OBJ* clientObj = DRV_BME280_ClientObjGet(handle);
+    DRV_BME280_OBJ* dObj     = NULL;
+    DRV_I2C_TRANSFER_HANDLE transferHandle;
+    
+    if (clientObj == NULL)
+    {
+        return false;
+    }
+    if (clientObj->isBusy == true)
+    {
+        return false;
+    }
+    
+    clientObj->isBusy = true;
+    
+    dObj = &gDrvBME280Obj[clientObj->drvIndex];
+        
+    clientObj->wrBuffer[0] = reg_addr;
+    
+    clientObj->wrBuffer[1] = data;
+    
+    clientObj->wrInProgress = true;
+    
+    clientObj->event = DRV_BME280_EVENT_EEPROM_WRITE_DONE;
+    
+    dObj->drvInterface->write(clientObj->i2cDrvHandle, clientObj->configParams.eepromAddr, (void*)clientObj->wrBuffer, 1 + 1, &transferHandle);
+    
+    if (transferHandle != DRV_I2C_TRANSFER_HANDLE_INVALID)
+    {
+        return true;
+    }
+    else
+    {        
+        clientObj->isBusy = false;
+        clientObj->wrInProgress = false;
+        return false;
+    }
+}
+
+uint8_t BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr) {
+    DRV_BME280_CLIENT_OBJ* clientObj = DRV_BME280_ClientObjGet(handle);
+    DRV_BME280_OBJ* dObj     = NULL;
+    DRV_I2C_TRANSFER_HANDLE transferHandle;
+    uint8_t* rdBuffer = 0;
+    
+    if (clientObj == NULL)
+    {
+        return false;
+    }
+    if (clientObj->isBusy == true)
+    {
+        return false;
+    }
+    
+    clientObj->isBusy = true;
+    
+    dObj = &gDrvBME280Obj[clientObj->drvIndex];
+    
+    clientObj->wrBuffer[0] = reg_addr;
+    
+    clientObj->event = DRV_BME280_EVENT_EEPROM_READ_DONE;
+    
+    dObj->drvInterface->writeRead(clientObj->i2cDrvHandle, clientObj->configParams.eepromAddr, (void*)clientObj->wrBuffer, 1, (void *)rdBuffer, 1, &transferHandle);
+    
+    if (transferHandle != DRV_I2C_TRANSFER_HANDLE_INVALID)
+    {
+        return (uint8_t) *rdBuffer;
+    }
+    else
+    {        
+        clientObj->isBusy = false;
+        return false;
+    }
+}
+
+bool BME280_readBlock(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t *read_buff, uint8_t length)
+{
+    DRV_BME280_CLIENT_OBJ* clientObj = DRV_BME280_ClientObjGet(handle);
+    DRV_BME280_OBJ* dObj     = NULL;
+    DRV_I2C_TRANSFER_HANDLE transferHandle;
+    
+    if (clientObj == NULL)
+    {
+        return false;
+    }
+    if (clientObj->isBusy == true)
+    {
+        return false;
+    }
+    
+    clientObj->isBusy = true;
+    
+    dObj = &gDrvBME280Obj[clientObj->drvIndex];
+    
+    clientObj->wrBuffer[0] = reg_addr;
+    
+    clientObj->event = DRV_BME280_EVENT_EEPROM_READ_DONE;
+    
+    dObj->drvInterface->writeRead(clientObj->i2cDrvHandle, clientObj->configParams.eepromAddr, (void*)clientObj->wrBuffer, 1, (void *)read_buff, length, &transferHandle);
+    
+    if (transferHandle != DRV_I2C_TRANSFER_HANDLE_INVALID)
+    {
+        return true;
+    }
+    else
+    {        
+        clientObj->isBusy = false;
+        return false;
+    }
+}
+
 bool DRV_BME280_TemperatureRead(const DRV_HANDLE handle, uint16_t* temperatureData)
 {
     DRV_BME280_CLIENT_OBJ* clientObj = DRV_BME280_ClientObjGet(handle);
@@ -321,7 +719,7 @@ bool DRV_BME280_TemperatureRead(const DRV_HANDLE handle, uint16_t* temperatureDa
     
     clientObj->wrBuffer[0] = APP_TEMP_TEMPERATURE_REG_ADDR;
     
-    clientObj->event = DRV_BME280_EVENT_TEMP_READ_DONE;
+    clientObj->event = DRV_BME280_EVENT_BME280_READ_DONE;
     
     dObj->drvInterface->writeRead(clientObj->i2cDrvHandle, clientObj->configParams.bme280Addr, (void*)clientObj->wrBuffer, 1, (void *)temperatureData, 2, &transferHandle);
     
