@@ -157,16 +157,16 @@ static uint32_t BME280_compensateHumidity(void);
 
 bool DRV_BME280_writeByte(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t data);
 void BME280_writeBlock(uint8_t *write_buff, uint8_t length);
-uint8_t BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr);
+bool BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t* data);
 bool BME280_readBlock(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t *read_buff, uint8_t length);
 
 /**
   Section: Driver APIs
  */
 
-uint8_t BME280_getID(const DRV_HANDLE handle) {
-    return BME280_readByte(handle, BME280_ID_REG);
-}
+//uint8_t BME280_getID(const DRV_HANDLE handle) {
+//    return BME280_readByte(handle, BME280_ID_REG);
+//}
 
 void BME280_reset(const DRV_HANDLE handle) {
     DRV_BME280_writeByte(handle, BME280_RESET_REG, BME280_SOFT_RESET);
@@ -408,8 +408,8 @@ static void DRV_BME280_DRVEventHandler( DRV_I2C_TRANSFER_EVENT event, DRV_I2C_TR
         }
     }
     
-    if (clientObj->wrInProgress == false && clientObj->eepChkBusyStatus == false)
-    {
+    //if (clientObj->wrInProgress == false && clientObj->eepChkBusyStatus == false)
+    //{
         if(event != DRV_I2C_TRANSFER_EVENT_COMPLETE)
         {
             clientObj->event = DRV_BME280_EVENT_ERROR;
@@ -421,7 +421,7 @@ static void DRV_BME280_DRVEventHandler( DRV_I2C_TRANSFER_EVENT event, DRV_I2C_TR
         {
             clientObj->callback(clientObj->event, clientObj->context);
         }
-    }
+    //}
 }
 
 static DRV_BME280_CLIENT_OBJ* DRV_BME280_ClientObjGet(const DRV_HANDLE handle)
@@ -625,11 +625,10 @@ bool DRV_BME280_writeByte(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t dat
     }
 }
 
-uint8_t BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr) {
+bool BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr, uint8_t* rdBuffer) {
     DRV_BME280_CLIENT_OBJ* clientObj = DRV_BME280_ClientObjGet(handle);
     DRV_BME280_OBJ* dObj     = NULL;
     DRV_I2C_TRANSFER_HANDLE transferHandle;
-    uint8_t* rdBuffer = 0;
     
     if (clientObj == NULL)
     {
@@ -648,14 +647,15 @@ uint8_t BME280_readByte(const DRV_HANDLE handle, uint8_t reg_addr) {
     
     clientObj->event = DRV_BME280_EVENT_EEPROM_READ_DONE;
     
-    dObj->drvInterface->writeRead(clientObj->i2cDrvHandle, clientObj->configParams.eepromAddr, (void*)clientObj->wrBuffer, 1, (void *)rdBuffer, 1, &transferHandle);
+    dObj->drvInterface->writeRead(clientObj->i2cDrvHandle, clientObj->configParams.bme280Addr, (void*)clientObj->wrBuffer, 1, (void *)rdBuffer, 1, &transferHandle);
+    
     
     if (transferHandle != DRV_I2C_TRANSFER_HANDLE_INVALID)
     {
-        return (uint8_t) *rdBuffer;
+        return true;
     }
     else
-    {        
+    {
         clientObj->isBusy = false;
         return false;
     }

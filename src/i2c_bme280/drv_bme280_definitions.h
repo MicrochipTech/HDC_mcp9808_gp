@@ -35,7 +35,7 @@ typedef enum
 
 typedef enum
 {
-    DRV_BME280_EVENT_TEMP_READ_DONE = 0,
+    DRV_BME280_EVENT_BME280_READ_DONE = 0,
     DRV_BME280_EVENT_EEPROM_WRITE_DONE,
     DRV_BME280_EVENT_EEPROM_READ_DONE,
     DRV_BME280_EVENT_ERROR,
@@ -119,8 +119,8 @@ typedef struct
     DRV_BME280_DRV_CALLBACK_REGISTER              callbackRegister;
 } DRV_BME280_DRV_INTERFACE;
 
-    typedef struct
-    {
+typedef struct
+{
     const DRV_BME280_DRV_INTERFACE* drvInterface;
     const uintptr_t clientObj;
     uint8_t maxClients;
