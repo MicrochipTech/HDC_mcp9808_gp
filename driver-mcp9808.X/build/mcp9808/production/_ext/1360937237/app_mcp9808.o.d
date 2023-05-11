@@ -111,7 +111,61 @@ build/mcp9808/production/_ext/1360937237/app_mcp9808.o: \
  ../src/packs/ATSAME54P20A_DFP/pio/same54p20a.h \
  ../src/config/mcp9808/device_cache.h \
  ../src/config/mcp9808/toolchain_specifics.h \
- ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h
+ ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h \
+ ../src/config/mcp9808/driver/driver_common.h \
+ ../src/config/mcp9808/definitions.h \
+ ../src/config/mcp9808/peripheral/nvmctrl/plib_nvmctrl.h \
+ ../src/config/mcp9808/device.h \
+ ../src/config/mcp9808/peripheral/sercom/usart/plib_sercom1_usart.h \
+ ../src/config/mcp9808/peripheral/sercom/usart/plib_sercom_usart_common.h \
+ ../src/config/mcp9808/peripheral/evsys/plib_evsys.h \
+ ../src/config/mcp9808/system/command/sys_command.h \
+ ../src/config/mcp9808/system/system.h \
+ ../src/config/mcp9808/system/system_common.h \
+ ../src/config/mcp9808/system/system_module.h \
+ ../src/config/mcp9808/system/system_common.h \
+ ../src/config/mcp9808/peripheral/sercom/i2c_master/plib_sercom6_i2c_master.h \
+ ../src/config/mcp9808/peripheral/sercom/i2c_master/plib_sercom_i2c_master_common.h \
+ ../src/config/mcp9808/peripheral/port/plib_port.h \
+ ../src/config/mcp9808/peripheral/clock/plib_clock.h \
+ ../src/config/mcp9808/peripheral/nvic/plib_nvic.h \
+ ../src/config/mcp9808/peripheral/cmcc/plib_cmcc.h \
+ ../src/config/mcp9808/bsp/bsp.h \
+ ../src/config/mcp9808/driver/i2c/drv_i2c.h \
+ ../src/config/mcp9808/driver/i2c/drv_i2c_definitions.h \
+ ../src/config/mcp9808/driver/driver.h \
+ ../src/config/mcp9808/system/int/sys_int.h \
+ ../src/config/mcp9808/system/int/sys_int_mapping.h \
+ ../src/config/mcp9808/driver/i2c/src/drv_i2c_local.h \
+ ../src/config/mcp9808/driver/i2c/drv_i2c_definitions.h \
+ ../src/config/mcp9808/osal/osal.h \
+ ../src/config/mcp9808/osal/osal_definitions.h \
+ ../src/config/mcp9808/osal/osal_freertos.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/FreeRTOS.h \
+ ../src/config/mcp9808/FreeRTOSConfig.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/projdefs.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/portable.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/deprecated_definitions.h \
+ ../src/third_party/rtos/FreeRTOS/Source/portable/GCC/SAM/ARM_CM4F/portmacro.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/mpu_wrappers.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/queue.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/task.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/list.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/semphr.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/queue.h \
+ ../src/third_party/rtos/FreeRTOS/Source/include/task.h \
+ ../src/config/mcp9808/system/console/sys_console.h \
+ ../src/config/mcp9808/system/console/src/sys_console_local.h \
+ ../src/config/mcp9808/system/console/src/sys_console_uart_definitions.h \
+ ../src/config/mcp9808/system/int/sys_int.h \
+ ../src/config/mcp9808/system/cache/sys_cache.h \
+ ../src/config/mcp9808/system/reset/sys_reset.h \
+ ../src/config/mcp9808/osal/osal.h \
+ ../src/config/mcp9808/system/debug/sys_debug.h ../src/app_mcp9808.h \
+ ../src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808.h \
+ ../src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808_definitions.h \
+ ../src/config/mcp9808/driver/i2c/drv_i2c.h \
+ ../src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808_local.h
 
 ../src/app_mcp9808.h:
 
@@ -340,3 +394,113 @@ build/mcp9808/production/_ext/1360937237/app_mcp9808.o: \
 ../src/config/mcp9808/toolchain_specifics.h:
 
 ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h:
+
+../src/config/mcp9808/driver/driver_common.h:
+
+../src/config/mcp9808/definitions.h:
+
+../src/config/mcp9808/peripheral/nvmctrl/plib_nvmctrl.h:
+
+../src/config/mcp9808/device.h:
+
+../src/config/mcp9808/peripheral/sercom/usart/plib_sercom1_usart.h:
+
+../src/config/mcp9808/peripheral/sercom/usart/plib_sercom_usart_common.h:
+
+../src/config/mcp9808/peripheral/evsys/plib_evsys.h:
+
+../src/config/mcp9808/system/command/sys_command.h:
+
+../src/config/mcp9808/system/system.h:
+
+../src/config/mcp9808/system/system_common.h:
+
+../src/config/mcp9808/system/system_module.h:
+
+../src/config/mcp9808/system/system_common.h:
+
+../src/config/mcp9808/peripheral/sercom/i2c_master/plib_sercom6_i2c_master.h:
+
+../src/config/mcp9808/peripheral/sercom/i2c_master/plib_sercom_i2c_master_common.h:
+
+../src/config/mcp9808/peripheral/port/plib_port.h:
+
+../src/config/mcp9808/peripheral/clock/plib_clock.h:
+
+../src/config/mcp9808/peripheral/nvic/plib_nvic.h:
+
+../src/config/mcp9808/peripheral/cmcc/plib_cmcc.h:
+
+../src/config/mcp9808/bsp/bsp.h:
+
+../src/config/mcp9808/driver/i2c/drv_i2c.h:
+
+../src/config/mcp9808/driver/i2c/drv_i2c_definitions.h:
+
+../src/config/mcp9808/driver/driver.h:
+
+../src/config/mcp9808/system/int/sys_int.h:
+
+../src/config/mcp9808/system/int/sys_int_mapping.h:
+
+../src/config/mcp9808/driver/i2c/src/drv_i2c_local.h:
+
+../src/config/mcp9808/driver/i2c/drv_i2c_definitions.h:
+
+../src/config/mcp9808/osal/osal.h:
+
+../src/config/mcp9808/osal/osal_definitions.h:
+
+../src/config/mcp9808/osal/osal_freertos.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/FreeRTOS.h:
+
+../src/config/mcp9808/FreeRTOSConfig.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/projdefs.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/portable.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/deprecated_definitions.h:
+
+../src/third_party/rtos/FreeRTOS/Source/portable/GCC/SAM/ARM_CM4F/portmacro.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/mpu_wrappers.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/queue.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/task.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/list.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/semphr.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/queue.h:
+
+../src/third_party/rtos/FreeRTOS/Source/include/task.h:
+
+../src/config/mcp9808/system/console/sys_console.h:
+
+../src/config/mcp9808/system/console/src/sys_console_local.h:
+
+../src/config/mcp9808/system/console/src/sys_console_uart_definitions.h:
+
+../src/config/mcp9808/system/int/sys_int.h:
+
+../src/config/mcp9808/system/cache/sys_cache.h:
+
+../src/config/mcp9808/system/reset/sys_reset.h:
+
+../src/config/mcp9808/osal/osal.h:
+
+../src/config/mcp9808/system/debug/sys_debug.h:
+
+../src/app_mcp9808.h:
+
+../src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808.h:
+
+../src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808_definitions.h:
+
+../src/config/mcp9808/driver/i2c/drv_i2c.h:
+
+../src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808_local.h:

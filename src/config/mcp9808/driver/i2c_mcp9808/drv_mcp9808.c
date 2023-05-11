@@ -13,7 +13,7 @@
 #include "driver/i2c/drv_i2c.h"
 #include <string.h>
 
-#define APP_TEMP_TEMPERATURE_REG_ADDR               0x00
+#define APP_TEMP_TEMPERATURE_REG_ADDR               0x05
 
 DRV_MCP9808_OBJ gDrvTempSensorObj[DRV_MCP9808_INSTANCES_NUMBER];
 
@@ -224,14 +224,93 @@ void DRV_MCP9808_TransferEventHandlerSet(
 uint8_t DRV_MCP9808_TemperatureGet(const DRV_HANDLE handle, uint16_t* temperatureData)
 {
     int16_t temp;
-    (void)handle;
-
+    (void)handle;  
+    
+    temp = ((*temperatureData & 0xFF00) >> 8) | ((*temperatureData & 0x00FF) << 8);
+    
     // Convert the temperature value read from sensor to readable format (Degree Celsius)
-    // For demonstration purpose, temperature value is assumed to be positive.
-    // The maximum positive temperature measured by sensor is +125 C
-    temp = (*temperatureData << 8) | (*temperatureData >> 8);
-    temp = (temp >> 7) * 0.5;
-    return (uint8_t)temp;    
+    
+    temp = (temp >> 4) & 0x00FF;
+    return (uint8_t)temp;
+    
+}
+
+bool DRV_MCP9808_ReadWord(const DRV_HANDLE handle, uint8_t memAddr, uint16_t* data)
+{
+    DRV_MCP9808_CLIENT_OBJ* clientObj = DRV_TEMP_SENSOR_ClientObjGet(handle);
+    DRV_MCP9808_OBJ* dObj     = NULL;
+    DRV_I2C_TRANSFER_HANDLE transferHandle;
+    
+    if (clientObj == NULL)
+    {
+        return false;
+    }
+    
+    if (clientObj->isBusy == true)
+    {
+        return false;
+    }
+    
+    clientObj->isBusy = true;
+    
+    dObj = &gDrvTempSensorObj[clientObj->drvIndex];
+    
+    clientObj->wrBuffer[0] = memAddr;
+    
+    clientObj->event = DRV_MCP9808_EVENT_TEMP_READ_DONE;
+    
+    dObj->drvInterface->writeRead(clientObj->i2cDrvHandle, clientObj->configParams.tempSensorAddr, (void*)clientObj->wrBuffer, 1, (void *)data, 2, &transferHandle);
+    
+    if (transferHandle != DRV_I2C_TRANSFER_HANDLE_INVALID)
+    {
+        return true;
+    }
+    else
+    {        
+        clientObj->isBusy = false;
+        return false;
+    }
+}
+
+bool DRV_MCP9808_Write(const DRV_HANDLE handle, uint8_t memAddr, uint8_t* wrBuffer, uint8_t nWrBytes)
+{
+    DRV_MCP9808_CLIENT_OBJ* clientObj = DRV_TEMP_SENSOR_ClientObjGet(handle);
+    DRV_MCP9808_OBJ* dObj     = NULL;
+    DRV_I2C_TRANSFER_HANDLE transferHandle;
+    
+    if (clientObj == NULL)
+    {
+        return false;
+    }
+    if (clientObj->isBusy == true)
+    {
+        return false;
+    }
+    
+    clientObj->isBusy = true;
+    
+    dObj = &gDrvTempSensorObj[clientObj->drvIndex];
+        
+    clientObj->wrBuffer[0] = memAddr;
+    
+    memcpy(&clientObj->wrBuffer[1], wrBuffer, nWrBytes);
+    
+    clientObj->wrInProgress = true;
+    
+    clientObj->event = DRV_MCP9808_EVENT_REGISTER_WRITE_DONE;
+    
+    dObj->drvInterface->write(clientObj->i2cDrvHandle, clientObj->configParams.tempSensorAddr, (void*)clientObj->wrBuffer, nWrBytes + 1, &transferHandle);
+    
+    if (transferHandle != DRV_I2C_TRANSFER_HANDLE_INVALID)
+    {
+        return true;
+    }
+    else
+    {        
+        clientObj->isBusy = false;
+        clientObj->wrInProgress = false;
+        return false;
+    }
 }
 
 bool DRV_MCP9808_TemperatureRead(const DRV_HANDLE handle, uint16_t* temperatureData)
@@ -296,7 +375,7 @@ bool DRV_MCP9808_EEPROMWrite(const DRV_HANDLE handle, uint8_t memAddr, uint8_t* 
     
     clientObj->wrInProgress = true;
     
-    clientObj->event = DRV_MCP9808_EVENT_EEPROM_WRITE_DONE;
+    clientObj->event = DRV_MCP9808_EVENT_REGISTER_WRITE_DONE;
     
     dObj->drvInterface->write(clientObj->i2cDrvHandle, clientObj->configParams.eepromAddr, (void*)clientObj->wrBuffer, nWrBytes + 1, &transferHandle);
     

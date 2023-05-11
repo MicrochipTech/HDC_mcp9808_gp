@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/main.c</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/tasks.c</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/app_mcp9808.c</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/app_mcp9808.h</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808_definitions.h</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808.c</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/system/command/sys_command.h</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808.h</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/system/command/src/sys_command.c</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/driver/i2c_mcp9808/drv_mcp9808_local.h</file>
+            <file>file:/C:/git/es-harmony-driver-homework/firmware/src/config/mcp9808/system/console/src/sys_console.c</file>
+        </group>
     </open-files>
 </project-private>

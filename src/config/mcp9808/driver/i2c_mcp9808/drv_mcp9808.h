@@ -18,11 +18,17 @@ uint8_t DRV_MCP9808_TemperatureGet(const DRV_HANDLE handle, uint16_t* temperatur
 
 bool DRV_MCP9808_TemperatureRead(const DRV_HANDLE handle, uint16_t* temperatureData);
 
+bool DRV_MCP9808_ReadWord(const DRV_HANDLE handle, uint8_t memAddr, uint16_t* data);
+
+bool DRV_MCP9808_Write(const DRV_HANDLE handle, uint8_t memAddr, uint8_t* wrBuffer, uint8_t nWrBytes);
+
+bool DRV_MCP9808_TransferSetup(const DRV_HANDLE handle, DRV_MCP9808_CONFIG_PARAMS* configParams);
+
 bool DRV_MCP9808_EEPROMWrite(const DRV_HANDLE handle, uint8_t memAddr, uint8_t* wrBuffer, uint8_t nWrBytes);
 
 bool DRV_MCP9808_EEPROMRead(const DRV_HANDLE handle, uint8_t memAddr, uint8_t* rdBuffer, uint8_t nRdBytes);
 
-bool DRV_MCP9808_TransferSetup(const DRV_HANDLE handle, DRV_MCP9808_CONFIG_PARAMS* configParams);
+
 
 #endif      //DRV_TEMP_SENSOR_H
 
